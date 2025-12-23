@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Multi-Translator (Serverless)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; padding-top: 50px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .container { max-width: 800px; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        h2 { color: #1a73e8; margin-bottom: 30px; text-align: center; font-weight: 700; }
+        .io-group { display: flex; gap: 20px; margin-bottom: 20px; }
+        .io-box { flex: 1; }
+        textarea { border-radius: 12px !important; border: 1px solid #dee2e6 !important; padding: 15px !important; resize: none; font-size: 16px; }
+        textarea:focus { border-color: #1a73e8 !important; box-shadow: 0 0 0 0.2rem rgba(26,115,232,0.25) !important; }
+        #result-box-wrapper { position: relative; }
+        #result-box { height: 150px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 12px; padding: 15px; font-size: 16px; overflow-y: auto; }
+        .copy-btn { 
+            position: absolute; 
+            bottom: 10px; 
+            right: 10px; 
+            background: white; 
+            border: 1px solid #dee2e6; 
+            border-radius: 8px; 
+            padding: 5px 10px; 
+            cursor: pointer; 
+            font-size: 0.8rem;
+            color: #5f6368;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 10;
+        }
+        .copy-btn:hover { background: #f1f3f4; color: #1a73e8; border-color: #1a73e8; }
+        .btn-translate { background-color: #1a73e8; border: none; padding: 12px; border-radius: 12px; font-weight: 600; transition: all 0.3s; }
+        .btn-translate:hover { background-color: #1557b0; transform: translateY(-2px); }
+        .loading-spinner { display: none; margin-right: 10px; }
+        .footer-note { margin-top: 30px; padding: 15px; background: #e8f0fe; border-radius: 10px; font-size: 0.9rem; color: #1967d2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-translate me-2" viewBox="0 0 16 16"><path d="M4.545 6.714 4.11 8H3l1.862-5h1.284L8 8H6.833l-.435-1.286H4.545zm1.634-4.804L4.82 5.8h2.71L6.179 1.91z"/><path d="M0 15h16v-1H0v1zm16-11h-2V2.5a.5.5 0 0 0-.5-.5H11V0h-1v2H2.5a.5.5 0 0 0-.5.5V4H0v1h2v8.5a.5.5 0 0 0 .5.5H13.5a.5.5 0 0 0 .5-.5V5h2V4zM2 13V3h9v10H2zm10 0V3h2v10h-2z"/></svg>Smart Cloud-Translator</h2>
+        
+        <div class="row mb-3">
+            <div class="col-md-5">
+                <select id="srcLang" class="form-select">
+                    <option value="auto">自动检测 (Auto)</option>
+                    <option value="zh">中文 (Chinese)</option>
+                    <option value="en" selected>英文 (English)</option>
+                    <option value="es">西班牙语 (Spanish)</option>
+                    <option value="de">德语 (German)</option>
+                    <option value="fr">法语 (French)</option>
+                </select>
+            </div>
+            <div class="col-md-2 text-center py-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#1a73e8" class="bi bi-arrow-right" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/></svg>
+            </div>
+            <div class="col-md-5">
+                <select id="tgtLang" class="form-select">
+                    <option value="en">英文 (English)</option>
+                    <option value="zh" selected>中文 (Chinese)</option>
+                    <option value="es">西班牙语 (Spanish)</option>
+                    <option value="de">德语 (German)</option>
+                    <option value="fr">法语 (French)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="io-group">
+            <div class="io-box">
+                <textarea id="inputText" class="form-control" rows="6" placeholder="输入内容，按回车键(Enter)翻译..." oninput="handleInput()" onkeydown="handleKeyDown(event)"></textarea>
+            </div>
+            <div class="io-box">
+                <div id="result-box-wrapper">
+                    <div id="result-box">
+                        <div id="outputText" class="text-muted">翻译结果将在这里显示...</div>
+                    </div>
+                    <button class="copy-btn" onclick="copyToClipboard()" title="复制到剪贴板">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+                            <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                            <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                        </svg>
+                        <span id="copyText">复制</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="runTranslation()" class="btn btn-primary btn-translate w-100" id="btnText">
+            <span class="spinner-border spinner-border-sm loading-spinner" id="spinner"></span>
+            立即翻译
+        </button>
+        
+        <div class="footer-note">
+            <strong>GitHub Pages 版说明：</strong><br>
+            • 运行环境：纯前端 (HTML/JS)，零 CPU 消耗<br>
+            • 翻译大脑：Lingva Cloud API (Google Engine 驱动)<br>
+            • 特点：全球 CDN 加速，无需安装任何环境，即开即用
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const text = document.getElementById('outputText').innerText;
+            const copyText = document.getElementById('copyText');
+            if (text.includes("翻译结果") || text.includes("出错")) return;
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = copyText.innerText;
+                copyText.innerText = "已复制!";
+                setTimeout(() => copyText.innerText = originalText, 2000);
+            });
+        }
+
+        function handleInput() {
+            const text = document.getElementById('inputText').value;
+            const outputDiv = document.getElementById('outputText');
+            if (!text.trim()) {
+                outputDiv.innerText = "翻译结果将在这里显示...";
+                outputDiv.classList.add('text-muted');
+            }
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                runTranslation();
+            }
+        }
+
+        async function runTranslation() {
+            const text = document.getElementById('inputText').value;
+            const src = document.getElementById('srcLang').value;
+            const tgt = document.getElementById('tgtLang').value;
+            const outputDiv = document.getElementById('outputText');
+            const spinner = document.getElementById('spinner');
+            const btnText = document.getElementById('btnText');
+
+            if(!text.trim()) return;
+
+            spinner.style.display = 'inline-block';
+            btnText.disabled = true;
+            outputDiv.classList.add('text-muted');
+
+            try {
+                // 使用 Lingva 公开 API (无需 API Key，支持 CORS)
+                const response = await fetch(`https://lingva.ml/api/v1/${src}/${tgt}/${encodeURIComponent(text)}`);
+                const data = await response.json();
+                
+                if (data.translation) {
+                    outputDiv.innerText = data.translation;
+                    outputDiv.classList.remove('text-muted');
+                } else {
+                    throw new Error();
+                }
+            } catch (e) {
+                outputDiv.innerText = "翻译失败，请检查网络或稍后重试。";
+            } finally {
+                spinner.style.display = 'none';
+                btnText.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
