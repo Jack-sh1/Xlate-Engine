@@ -147,12 +147,48 @@ HTML_TEMPLATE = """
         body { background-color: #f0f2f5; padding-top: 50px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .container { max-width: 800px; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
         h2 { color: #1a73e8; margin-bottom: 30px; text-align: center; font-weight: 700; }
-        .io-group { display: flex; gap: 20px; margin-bottom: 20px; }
-        .io-box { flex: 1; }
-        textarea { border-radius: 12px !important; border: 1px solid #dee2e6 !important; padding: 15px !important; resize: none; font-size: 16px; }
+        .io-group { display: flex; gap: 20px; margin-bottom: 20px; align-items: stretch; }
+        .io-box { flex: 1; display: flex; flex-direction: column; }
+        textarea { border-radius: 12px !important; border: 1px solid #dee2e6 !important; padding: 15px !important; resize: none; font-size: 16px; min-height: 200px; height: 100%; width: 100%; flex: 1; }
         textarea:focus { border-color: #1a73e8 !important; box-shadow: 0 0 0 0.2rem rgba(26,115,232,0.25) !important; }
-        #result-box-wrapper { position: relative; }
-        #result-box { height: 150px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 12px; padding: 15px; font-size: 16px; overflow-y: auto; }
+        
+        /* Modern Select Styling */
+        .lang-select-wrapper {
+            position: relative;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 8px 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .lang-select-wrapper:hover {
+            border-color: #1a73e8;
+            box-shadow: 0 2px 8px rgba(26,115,232,0.1);
+        }
+        .form-select {
+            border: none !important;
+            background-color: transparent !important;
+            font-weight: 500;
+            color: #3c4043;
+            cursor: pointer;
+            padding: 0 !important;
+            box-shadow: none !important;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .lang-icon { color: #5f6368; margin-right: 10px; }
+        .swap-btn:hover {
+            transform: rotate(180deg);
+            background-color: #1a73e8 !important;
+            color: white !important;
+        }
+
+        #result-box-wrapper { position: relative; height: 100%; }
+        #result-box { min-height: 200px; height: 100%; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 12px; padding: 15px; font-size: 16px; overflow-y: auto; }
         .copy-btn { 
             position: absolute; 
             bottom: 10px; 
@@ -181,27 +217,35 @@ HTML_TEMPLATE = """
     <div class="container">
         <h2><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-translate me-2" viewBox="0 0 16 16"><path d="M4.545 6.714 4.11 8H3l1.862-5h1.284L8 8H6.833l-.435-1.286H4.545zm1.634-4.804L4.82 5.8h2.71L6.179 1.91z"/><path d="M0 15h16v-1H0v1zm16-11h-2V2.5a.5.5 0 0 0-.5-.5H11V0h-1v2H2.5a.5.5 0 0 0-.5.5V4H0v1h2v8.5a.5.5 0 0 0 .5.5H13.5a.5.5 0 0 0 .5-.5V5h2V4zM2 13V3h9v10H2zm10 0V3h2v10h-2z"/></svg>Smart Multi-Translator</h2>
         
-        <div class="row mb-3">
+        <div class="row mb-4 align-items-center">
             <div class="col-md-5">
-                <select id="srcLang" class="form-select" onchange="handleInput()">
-                    <option value="zh">中文 (Chinese)</option>
-                    <option value="en" selected>英文 (English)</option>
-                    <option value="es">西班牙语 (Spanish)</option>
-                    <option value="de">德语 (German)</option>
-                    <option value="fr">法语 (French)</option>
-                </select>
+                <div class="lang-select-wrapper">
+                    <span class="lang-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-globe" viewBox="0 0 16 16"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm7.5-6.923c-.67.204-1.335.82-1.887 1.855A7.97 7.97 0 0 0 5.145 4H7.5V1.077zM4.09 4a9.267 9.267 0 0 1 .64-1.539 6.7 6.7 0 0 1 .597-.933A7.025 7.025 0 0 0 2.255 4H4.09zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a6.958 6.958 0 0 0-.656 2.5h2.49zM4.847 5a12.5 12.5 0 0 0-.338 2.5H7.5V5H4.847zM8.5 5v2.5h2.99a12.495 12.495 0 0 0-.337-2.5H8.5zM9.27 1.077V4h2.355a7.97 7.97 0 0 0-.468-1.068c-.552-1.035-1.218-1.65-1.887-1.855zm3.34 2.923c-.311-1.013-.733-1.874-1.237-2.468A7.025 7.025 0 0 1 14.745 4h-2.135zm1.716 3.5a6.958 6.958 0 0 0-.656-2.5h-2.108c.174.782.282 1.623.312 2.5h2.452zM12.153 8.5a12.5 12.5 0 0 1-.338 2.5H8.5V8.5h3.653zm-4.653 2.5a12.5 12.5 0 0 1-.338-2.5H4.847v2.5H7.5zM3.82 8.5a12.5 12.5 0 0 0 .312 2.5H1.674a6.958 6.958 0 0 0 .656 2.5h1.49zm2.541 2.5c.552 1.035 1.218 1.65 1.887 1.855V11H5.145a7.97 7.97 0 0 0 .468 1.068zm3.639 1.855c.67-.204 1.335-.82 1.887-1.855A7.97 7.97 0 0 0 10.855 11H8.5v2.923zm2.94-2.923c.311 1.013.733 1.874 1.237 2.468A7.025 7.025 0 0 0 14.745 11h-2.135zM11.347 11a12.495 12.495 0 0 1 .312 2.5h2.108a6.958 6.958 0 0 1-.656-2.5h-1.764z"/></svg></span>
+                    <select id="srcLang" class="form-select" onchange="handleInput()">
+                        <option value="zh">中文 (Chinese)</option>
+                        <option value="en" selected>英文 (English)</option>
+                        <option value="es">西班牙语 (Spanish)</option>
+                        <option value="de">德语 (German)</option>
+                        <option value="fr">法语 (French)</option>
+                    </select>
+                </div>
             </div>
-            <div class="col-md-2 text-center py-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#1a73e8" class="bi bi-arrow-right" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/></svg>
+            <div class="col-md-2 text-center">
+                <div onclick="swapLanguages()" class="btn btn-light rounded-circle shadow-sm swap-btn" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: #1a73e8; cursor: pointer; transition: all 0.3s;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left-right" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1 11.5a.5.5 0 0 0 .5.5h11.793l-3.147 3.146a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708.708L13.293 11H1.5a.5.5 0 0 0-.5.5zm14-7a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 1 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H14.5a.5.5 0 0 1 .5.5z"/></svg>
+                </div>
             </div>
             <div class="col-md-5">
-                <select id="tgtLang" class="form-select" onchange="handleInput()">
-                    <option value="en">英文 (English)</option>
-                    <option value="zh" selected>中文 (Chinese)</option>
-                    <option value="es">西班牙语 (Spanish)</option>
-                    <option value="de">德语 (German)</option>
-                    <option value="fr">法语 (French)</option>
-                </select>
+                <div class="lang-select-wrapper">
+                    <span class="lang-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-translate" viewBox="0 0 16 16"><path d="M4.545 6.714 4.11 8H3l1.862-5h1.284L8 8H6.833l-.435-1.286H4.545zm1.634-4.804L4.82 5.8h2.71L6.179 1.91z"/><path d="M0 15h16v-1H0v1zm16-11h-2V2.5a.5.5 0 0 0-.5-.5H11V0h-1v2H2.5a.5.5 0 0 0-.5.5V4H0v1h2v8.5a.5.5 0 0 0 .5.5H13.5a.5.5 0 0 0 .5-.5V5h2V4zM2 13V3h9v10H2zm10 0V3h2v10h-2z"/></svg></span>
+                    <select id="tgtLang" class="form-select" onchange="handleInput()">
+                        <option value="en">英文 (English)</option>
+                        <option value="zh" selected>中文 (Chinese)</option>
+                        <option value="es">西班牙语 (Spanish)</option>
+                        <option value="de">德语 (German)</option>
+                        <option value="fr">法语 (French)</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -239,6 +283,27 @@ HTML_TEMPLATE = """
     </div>
 
     <script>
+        function swapLanguages() {
+            const srcSelect = document.getElementById('srcLang');
+            const tgtSelect = document.getElementById('tgtLang');
+            const inputText = document.getElementById('inputText');
+            const outputText = document.getElementById('outputText');
+
+            // 交换下拉框的值
+            const tempLang = srcSelect.value;
+            srcSelect.value = tgtSelect.value;
+            tgtSelect.value = tempLang;
+
+            // 如果右侧已经有翻译结果，将其换到左侧作为新输入，并触发翻译
+            const currentTranslation = outputText.innerText;
+            if (currentTranslation && currentTranslation !== "翻译结果将在这里显示..." && currentTranslation !== "翻译出错，请稍后重试。") {
+                inputText.value = currentTranslation;
+                runTranslation();
+            } else {
+                handleInput();
+            }
+        }
+
         function copyToClipboard() {
             const text = document.getElementById('outputText').innerText;
             const copyText = document.getElementById('copyText');
@@ -343,5 +408,6 @@ def translate_api():
         return jsonify({"error": f"暂不支持该语种组合或模型加载失败"}), 500
 
 if __name__ == '__main__':
-    print("Translator App running at http://127.0.0.1:5000")
-    app.run(debug=True, port=5000)
+    print("Translator App running at http://127.0.0.1:80")
+    # Note: Running on port 80 requires sudo/root privileges on most systems
+    app.run(debug=True, host='0.0.0.0', port=80)
