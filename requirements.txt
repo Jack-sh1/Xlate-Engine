@@ -1,0 +1,6 @@
+flask
+libsass
+torch
+transformers
+sentencepiece
+sacremoses
