@@ -1,0 +1,4 @@
+# Server configuration
+HOST = '0.0.0.0'
+PORT = 80
+DEBUG = True
